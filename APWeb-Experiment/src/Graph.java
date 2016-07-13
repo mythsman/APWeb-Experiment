@@ -3,6 +3,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Random;
 
 /**
  * The Graph.
@@ -83,7 +84,7 @@ public class Graph {
 	 * @throws IOException
 	 *             ioexception
 	 */
-	private void loadPois(int source, File file) throws IOException {
+	private void loadPois(File file) throws IOException {
 		BufferedReader reader = new BufferedReader(new FileReader(file));
 		String s = null;
 		int cnt = 0;
@@ -94,8 +95,17 @@ public class Graph {
 			s = reader.readLine();
 			double longitude = Double.parseDouble(s);
 			reader.readLine();
-			Poi poi = new Poi(longitude, latitude, source, cnt);
-			pois.add(poi);
+			Poi poi = new Poi(longitude, latitude, cnt);
+			int minId = -1;
+			double mindis = 1e9;
+			for (int i = 0; i < edges.size(); i++) {
+				double dis = poi.distanceToEdge(edges.get(i).getSvertex(), edges.get(i).getEvertex());
+				if (dis < mindis) {
+					mindis = dis;
+					minId = i;
+				}
+			}
+			pois.add(poi.projection(edges.get(minId).getSvertex(), edges.get(minId).getEvertex()));
 		}
 		reader.close();
 	}
@@ -116,28 +126,47 @@ public class Graph {
 		end = System.currentTimeMillis();
 		System.out.println("Loading " + edges.size() + " edges costs " + (end - start) + "ms.");
 		start = System.currentTimeMillis();
-		loadPois(Poi.BarLocations, new File("dataset/BarLocations_61.txt"));
-		loadPois(Poi.CafeLocations, new File("dataset/CafeLocations_65.txt"));
-		loadPois(Poi.FoodLocations, new File("dataset/FoodLocations_491.txt"));
-		loadPois(Poi.RestaurantLocations, new File("dataset/RestaurantLocations_320.txt"));
-		loadPois(Poi.StoreLocations, new File("dataset/StoreLocations_619.txt"));
+		loadPois(new File("dataset/BarLocations_61.txt"));
+		loadPois(new File("dataset/CafeLocations_65.txt"));
+		loadPois(new File("dataset/FoodLocations_491.txt"));
+		loadPois(new File("dataset/RestaurantLocations_320.txt"));
+		loadPois(new File("dataset/StoreLocations_619.txt"));
 		end = System.currentTimeMillis();
 		System.out.println("Loading " + pois.size() + " pois costs " + (end - start) + "ms.");
 	}
 
 	public void test() {
-		for (Vertex ver : vertices) {
+		/*
+		 * for (Vertex ver : vertices) { double mindis = 1e9; for (Edge edge :
+		 * edges) { double dis = ver.distanceToEdge(edge.getSvertex(),
+		 * edge.getEvertex()); if (dis < mindis) { mindis = dis; } } if (mindis
+		 * > 1) System.out.println(mindis); }
+		 * System.out.println("Vertex tests done");
+		 */
+		for (Poi poi : pois) {
 			double mindis = 1e9;
 			for (Edge edge : edges) {
-				double dis = ver.distanceToEdge(edge);
+				double dis = poi.distanceToEdge(edge.getSvertex(), edge.getEvertex());
 				if (dis < mindis) {
 					mindis = dis;
 				}
 			}
-			System.out.println(mindis);
-
+			if (mindis > 1)
+				System.out.println(mindis);
 		}
-		System.out.println("done");
+		System.out.println("Pois tests done");
+	}
+
+	public ArrayList<Vertex> getVertices() {
+		return vertices;
+	}
+
+	public ArrayList<Edge> getEdges() {
+		return edges;
+	}
+
+	public ArrayList<Poi> getPois() {
+		return pois;
 	}
 
 	public static void main(String[] args) throws IOException {

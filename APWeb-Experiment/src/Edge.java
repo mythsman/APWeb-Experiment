@@ -29,32 +29,24 @@ public class Edge implements Comparable<Object> {
 		return eid;
 	}
 
-	public void setEid(int eid) {
-		this.eid = eid;
-	}
-
 	public double getLength() {
 		return length;
-	}
-
-	public void setLength(double length) {
-		this.length = length;
 	}
 
 	public Vertex getSvertex() {
 		return svertex;
 	}
 
-	public void setSvertex(Vertex svertex) {
-		this.svertex = svertex;
-	}
-
 	public Vertex getEvertex() {
 		return evertex;
 	}
 
-	public void setEvertex(Vertex evertex) {
-		this.evertex = evertex;
+	public Vertex except(Vertex v) {
+		if (v.equals(evertex)) {
+			return svertex;
+		} else {
+			return evertex;
+		}
 	}
 
 	@Override

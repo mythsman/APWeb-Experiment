@@ -5,8 +5,8 @@
  *
  */
 public class Location {
-	public static final double EARTH_RADIUS = 6378160;
-	private double longitude, latitude;
+	private static final double EARTH_RADIUS = 6378160;
+	protected double longitude, latitude;
 
 	/**
 	 * 
@@ -36,14 +36,14 @@ public class Location {
 	public double sphericalDistance(Location loc) {
 		double x = radians(this.longitude), y = radians(this.latitude);
 		double a = radians(loc.longitude), b = radians(loc.latitude);
-		if (isZero(x - a) && isZero(y - b)) {
+		if (isZero(EARTH_RADIUS * (x - a)) && isZero(EARTH_RADIUS * (y - b))) {
 			return 0;
 		}
 		return EARTH_RADIUS * Math.acos(Math.cos(b) * Math.cos(y) * Math.cos(a - x) + Math.sin(b) * Math.sin(y));
 	}
 
 	private boolean isZero(double d) {
-		return d * d < 1e-6;
+		return d * d < 1;
 	}
 
 	/**
@@ -53,15 +53,13 @@ public class Location {
 	 *            The concerned edge.
 	 * @return The distance from the vertex to the edge.
 	 */
-	public double distanceToEdge(Edge edge) {
-		Vertex v1 = edge.getSvertex();
-		Vertex v2 = edge.getEvertex();
+	public double distanceToEdge(Location v1, Location v2) {
 		double d1 = this.sphericalDistance(v1);
 		double d2 = this.sphericalDistance(v2);
 		if (isZero(d1) || isZero(d2)) {
 			return 0;
 		}
-		double d = edge.getLength();
+		double d = v1.sphericalDistance(v2);
 		double cos1 = (d1 * d1 + d * d - d2 * d2) / (2.0 * d1 * d);
 		double cos2 = (d2 * d2 + d * d - d1 * d1) / (2.0 * d2 * d);
 		if (cos1 < 0) {
@@ -70,10 +68,40 @@ public class Location {
 			return d2;
 		} else {
 			double p = (d + d1 + d2) / 2.0;
-			double dis = Math.sqrt(p * (p - d) * (p - d1) * (p - d2)) * 2.0 / d;
-			return dis;
+			if (p < d || p < d1 || p < d2)
+				return 0;
+			else
+				return Math.sqrt(p * (p - d) * (p - d1) * (p - d2)) * 2.0 / d;
 		}
 
+	}
+
+	public Location projection(Location loc1, Location loc2) {
+		if (in(loc1, loc2)) {
+			return this;
+		} else {
+			double d1 = this.sphericalDistance(loc1);
+			double d2 = this.sphericalDistance(loc2);
+			double d = loc1.sphericalDistance(loc2);
+			double cos1 = d1 * d1 + d * d - d2 * d2;
+			double cos2 = d2 * d2 + d * d - d1 * d1;
+			if (cos1 < 0) {
+				return loc1;
+			} else if (cos2 < 0) {
+				return loc2;
+			} else {
+				double x = getLongitude(), y = getLatitude();
+				double x1 = loc1.getLongitude(), y1 = loc1.getLatitude();
+				double x2 = loc2.getLongitude(), y2 = loc2.getLatitude();
+				double rate = 1 - ((y - y1) * (y2 - y1) + (x - x1) * (x2 - x1))
+						/ ((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+				return new Location((1 - rate) * x1 + rate * x2, (1 - rate) * y1 + rate * y2);
+			}
+		}
+	}
+
+	public boolean in(Location loc1, Location loc2) {
+		return isZero(distanceToEdge(loc1, loc2));
 	}
 
 	public double getLongitude() {
@@ -92,8 +120,13 @@ public class Location {
 		this.latitude = latitude;
 	}
 
-	public static void main(String[] args) {
+	public boolean equals(Location loc) {
+		return isZero(longitude - loc.longitude) && isZero(latitude - loc.latitude);
+	}
 
+	@Override
+	public String toString() {
+		return "(" + longitude + "," + latitude + ")";
 	}
 
 }

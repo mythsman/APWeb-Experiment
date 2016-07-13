@@ -6,7 +6,7 @@ import java.util.ArrayList;
  * @author myths
  *
  */
-public class Vertex extends Location implements Comparable<Object> {
+public class Vertex extends Location{
 	private int vid;
 	private int degree;
 	private ArrayList<Integer> nearbyEdgeId;
@@ -27,6 +27,10 @@ public class Vertex extends Location implements Comparable<Object> {
 		nearbyEdgeId = new ArrayList<Integer>();
 		this.vid = vid;
 		this.degree = degree;
+	}
+
+	public ArrayList<Integer> getNearbyEdgeId() {
+		return nearbyEdgeId;
 	}
 
 	public int getVid() {
@@ -53,15 +57,5 @@ public class Vertex extends Location implements Comparable<Object> {
 	 */
 	public void addEdgeId(int id) {
 		nearbyEdgeId.add(id);
-	}
-
-	@Override
-	public int compareTo(Object arg0) {
-		if (this.vid < ((Vertex) arg0).vid)
-			return 1;
-		else if (this.vid > ((Vertex) arg0).vid)
-			return -1;
-		else
-			return 0;
 	}
 }
