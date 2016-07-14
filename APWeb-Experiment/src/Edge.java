@@ -1,10 +1,16 @@
+import java.io.Serializable;
+
 /**
  * This class represents the edges in the graph.
  * 
  * @author myths
  *
  */
-public class Edge implements Comparable<Object> {
+public class Edge implements Comparable<Object>, Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 2L;
 	private int eid;
 	private double length;
 	private Vertex svertex, evertex;

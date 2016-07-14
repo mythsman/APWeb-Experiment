@@ -8,7 +8,9 @@ public class NormalDistribution extends Distribution {
 	public Location randomLoc() {
 		Random rand = new Random();
 		int id = rand.nextInt(graph.getEdges().size());
-		return linearInterpolation(graph.getEdges().get(id), rand.nextDouble());
+		Location loc=linearInterpolation(graph.getEdges().get(id), rand.nextDouble());
+		loc.setInEdgeId(id);
+		return loc;
 	}
 
 	public static void main(String[] args) throws IOException {

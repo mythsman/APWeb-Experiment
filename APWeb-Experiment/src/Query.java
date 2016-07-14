@@ -7,17 +7,23 @@ public class Query {
 	private Location user;
 	private Poi poi;
 	private ArrayList<Location> waypoints;
+	private double dist;
 
 	public Query(Location user, Poi poi, int qid) {
 		this.user = user;
 		this.poi = poi;
 		this.qid = qid;
+		sa = 1;
 		waypoints = new ArrayList<Location>();
 		this.length = user.sphericalDistance(poi);
 	}
 
-	public void calPath(Graph graph) {
+	public double getDist() {
+		return dist;
+	}
 
+	public void setDist(double dist) {
+		this.dist = dist;
 	}
 
 	public int getSa() {
@@ -50,6 +56,41 @@ public class Query {
 
 	public void setWaypoints(ArrayList<Location> waypoints) {
 		this.waypoints = waypoints;
+	}
+
+	@Override
+	public String toString() {
+		String s = user + "->";
+		for (Location loc : waypoints) {
+			s += loc + "->";
+		}
+		s += poi;
+		return s;
+	}
+
+	public boolean in(Query query) {
+		ArrayList<Location> list = new ArrayList<Location>();
+		list.add(query.getUser());
+		list.addAll(query.getWaypoints());
+		list.add(query.getPoi());
+		boolean userIn = false, poiIn = false;
+		for (int i = 1; i < list.size(); i++) {
+			if (user.in(list.get(i - 1), list.get(i))) {
+				userIn = true;
+				break;
+			}
+		}
+		for (int i = 1; i < list.size(); i++) {
+			if (poi.in(list.get(i - 1), list.get(i))) {
+				poiIn = true;
+				break;
+			}
+		}
+		if (userIn && poiIn) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 }

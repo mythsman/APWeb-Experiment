@@ -1,11 +1,18 @@
+import java.io.Serializable;
+
 /**
  * This class is the father of all kinds of points.
  * 
  * @author myths
  *
  */
-public class Location {
+public class Location implements Serializable{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private static final double EARTH_RADIUS = 6378160;
+	private int inEdgeId;
 	protected double longitude, latitude;
 
 	/**
@@ -24,6 +31,14 @@ public class Location {
 
 	public double radians(double angle) {
 		return angle * Math.PI / 180;
+	}
+
+	public int getInEdgeId() {
+		return inEdgeId;
+	}
+
+	public void setInEdgeId(int inEdgeId) {
+		this.inEdgeId = inEdgeId;
 	}
 
 	/**
@@ -68,10 +83,11 @@ public class Location {
 			return d2;
 		} else {
 			double p = (d + d1 + d2) / 2.0;
-			if (p < d || p < d1 || p < d2)
+			if ((p - d) * (p - d1) * (p - d2) < 0) {
 				return 0;
-			else
+			} else {
 				return Math.sqrt(p * (p - d) * (p - d1) * (p - d2)) * 2.0 / d;
+			}
 		}
 
 	}
@@ -121,12 +137,20 @@ public class Location {
 	}
 
 	public boolean equals(Location loc) {
-		return isZero(longitude - loc.longitude) && isZero(latitude - loc.latitude);
+		return (longitude - loc.longitude) * (longitude - loc.longitude) < 1e-9
+				&& (latitude - loc.latitude) * (latitude - loc.latitude) < 1e-9;
 	}
 
 	@Override
 	public String toString() {
 		return "(" + longitude + "," + latitude + ")";
+	}
+
+	public static void main(String[] args) {
+		Location loc = new Location(-93.277618, 44.915874);
+		Location loc1 = new Location(-93.269224, 44.960969);
+		Location loc2 = new Location(-93.269224, 44.960165);
+		System.out.println(loc.distanceToEdge(loc1, loc2));
 	}
 
 }

@@ -8,7 +8,6 @@ import java.util.ArrayList;
  */
 public class Vertex extends Location{
 	private int vid;
-	private int degree;
 	private ArrayList<Integer> nearbyEdgeId;
 
 	/**
@@ -22,11 +21,11 @@ public class Vertex extends Location{
 	 * @param degree
 	 *            The degree of the vertex.
 	 */
-	public Vertex(double longitude, double latitude, int vid, int degree) {
+	public Vertex(double longitude, double latitude, int vid) {
 		super(longitude, latitude);
 		nearbyEdgeId = new ArrayList<Integer>();
 		this.vid = vid;
-		this.degree = degree;
+
 	}
 
 	public ArrayList<Integer> getNearbyEdgeId() {
@@ -39,14 +38,6 @@ public class Vertex extends Location{
 
 	public void setVid(int vid) {
 		this.vid = vid;
-	}
-
-	public int getDegree() {
-		return degree;
-	}
-
-	public void setDegree(int degree) {
-		this.degree = degree;
 	}
 
 	/**
