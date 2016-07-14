@@ -6,6 +6,10 @@
  */
 public class Poi extends Location {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -1847750713182534269L;
 	private int pid;
 
 	/**

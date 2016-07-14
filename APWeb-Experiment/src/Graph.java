@@ -13,7 +13,10 @@ import java.util.ArrayList;
  */
 public class Graph implements Serializable {
 
-	private static final long serialVersionUID = 1L;
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -1974866688573230523L;
 	private ArrayList<Vertex> vertices;
 	private ArrayList<Edge> edges;
 	private ArrayList<Poi> pois;

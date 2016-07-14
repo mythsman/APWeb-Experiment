@@ -1,6 +1,6 @@
 import java.util.ArrayList;
 
-public class Query {
+public class Query implements Comparable<Query> {
 	private int qid;
 	private double length;
 	private int sa;
@@ -77,13 +77,9 @@ public class Query {
 		for (int i = 1; i < list.size(); i++) {
 			if (user.in(list.get(i - 1), list.get(i))) {
 				userIn = true;
-				break;
 			}
-		}
-		for (int i = 1; i < list.size(); i++) {
 			if (poi.in(list.get(i - 1), list.get(i))) {
 				poiIn = true;
-				break;
 			}
 		}
 		if (userIn && poiIn) {
@@ -91,6 +87,16 @@ public class Query {
 		} else {
 			return false;
 		}
+	}
+
+	@Override
+	public int compareTo(Query arg0) {
+		if (this.length < arg0.getLength()) {
+			return 1;
+		} else if (this.length > arg0.getLength()) {
+			return -1;
+		} else
+			return 0;
 	}
 
 }

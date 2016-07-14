@@ -6,7 +6,7 @@ import java.io.Serializable;
  * @author myths
  *
  */
-public class Location implements Serializable{
+public class Location implements Serializable {
 	/**
 	 * 
 	 */
@@ -117,7 +117,13 @@ public class Location implements Serializable{
 	}
 
 	public boolean in(Location loc1, Location loc2) {
-		return isZero(distanceToEdge(loc1, loc2));
+
+		double eps = (latitude - loc1.latitude) * (longitude - loc2.latitude)
+				- (longitude - loc1.latitude) * (latitude - loc2.latitude);
+		return (latitude - loc1.latitude) * (latitude - loc2.latitude) <= 0
+				&& (longitude - loc1.longitude) * (longitude - loc2.longitude) <= 0 && eps * eps < 1e-9;
+
+		// return isZero(distanceToEdge(loc2, loc1));
 	}
 
 	public double getLongitude() {

@@ -53,21 +53,11 @@ public class LBS {
 
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
 		LBS lbs = new LBS();
-		QuerySet querySet = lbs.getQuerySet(600, new NormalDistribution());
-		long t1 = System.currentTimeMillis();
-		querySet.initPath();
-		long t2 = System.currentTimeMillis();
-		System.out.println(t2 - t1 + "ms");
-		querySet.initSa();
-		System.out.println("start");
-		long t3 = System.currentTimeMillis();
-		System.out.println(t3 - t2 + "ms");
-		/*
-		for (int i = 0; i < querySet.size(); i++) {
-			if (querySet.get(i).getSa() > 1)
-				System.out.println(querySet.get(i).getSa());
+		for (int val = 200; val <= 2000; val += 200) {
+			QuerySet querySet = lbs.getQuerySet(val, new GaussianDistribution());
+			querySet.initPath();
+			querySet.initSa();
+			querySet.testSaNum();
 		}
-		*/
-		System.out.println("end");
 	}
 }

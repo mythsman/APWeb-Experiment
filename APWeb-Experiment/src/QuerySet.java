@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class QuerySet {
 	private final double inf = 1e99;
@@ -118,16 +119,38 @@ public class QuerySet {
 		return this;
 	}
 
+	/**
+	 * Sort by euclidiean length Des;
+	 */
+	private void sort() {
+		Collections.sort(queries);
+	}
+
 	public QuerySet initSa() {
+		sort();
 		for (int i = 0; i < queries.size(); i++) {
-			for (int j = 0; j < queries.size(); j++) {
-				if (i != j && queries.get(i).getSa() != -1 && queries.get(j).getSa() != -1
-						&& queries.get(i).in(queries.get(j))) {
-					queries.get(j).setSa(queries.get(i).getSa() + queries.get(j).getSa());
-					queries.get(i).setSa(-1);
+			if (queries.get(i).getSa() == -1)
+				continue;
+			for (int j = i + 1; j < queries.size(); j++) {
+				if (queries.get(j).getSa() == -1)
+					continue;
+				boolean isIn = queries.get(j).in(queries.get(i));
+				if (isIn) {
+					queries.get(i).setSa(queries.get(i).getSa() + queries.get(j).getSa());
+					queries.get(j).setSa(-1);
 				}
 			}
 		}
 		return this;
+	}
+
+	public void testSaNum() {
+		int cnt = 0;
+		for (int i = 0; i < size(); i++) {
+			if (get(i).getSa() == -1) {
+				cnt++;
+			}
+		}
+		System.out.println("We have shared " + cnt + " queries in " + size() + " queries.");
 	}
 }

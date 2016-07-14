@@ -6,7 +6,12 @@ import java.util.ArrayList;
  * @author myths
  *
  */
-public class Vertex extends Location{
+public class Vertex extends Location {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1225727058273526383L;
 	private int vid;
 	private ArrayList<Integer> nearbyEdgeId;
 

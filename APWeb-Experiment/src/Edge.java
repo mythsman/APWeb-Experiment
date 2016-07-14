@@ -7,10 +7,11 @@ import java.io.Serializable;
  *
  */
 public class Edge implements Comparable<Object>, Serializable {
+
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 2L;
+	private static final long serialVersionUID = 8206488135922879477L;
 	private int eid;
 	private double length;
 	private Vertex svertex, evertex;
