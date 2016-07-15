@@ -1,10 +1,4 @@
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Random;;
 
@@ -12,23 +6,11 @@ public class LBS {
 	private Graph graph;
 
 	public LBS() throws ClassNotFoundException, IOException {
-		File file = null;
-		try {
-			file = new File("dataset/GraphObject.bin");
-			ObjectInputStream in = new ObjectInputStream(new FileInputStream(file));
-			System.out.println("Load object file.");
-			graph = (Graph) in.readObject();
-			in.close();
 
-		} catch (FileNotFoundException e) {
-			System.out.println("Generate object file.");
-			graph = new Graph();
-			graph.loadGraph();
-			ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(file));
-			out.writeObject(graph);
-			out.flush();
-			out.close();
-		}
+		System.out.println("Generate object file.");
+		graph = new Graph();
+		graph.loadGraph();
+
 	}
 
 	/**
@@ -53,11 +35,12 @@ public class LBS {
 
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
 		LBS lbs = new LBS();
-		for (int val = 200; val <= 2000; val += 200) {
-			QuerySet querySet = lbs.getQuerySet(val, new GaussianDistribution());
+		for (int i = 200; i <= 2000; i += 200) {
+			QuerySet querySet = lbs.getQuerySet(i, new GaussianDistribution());
 			querySet.initPath();
 			querySet.initSa();
 			querySet.testSaNum();
 		}
+		System.out.println("done");
 	}
 }

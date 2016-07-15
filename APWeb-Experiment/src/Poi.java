@@ -34,10 +34,6 @@ public class Poi extends Location {
 		this.pid = pid;
 	}
 
-	public double distanceToEdge(Edge edge) {
-
-		return 0;
-	}
 
 	@Override
 	public Poi projection(Location loc1, Location loc2) {

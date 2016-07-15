@@ -3,13 +3,13 @@ import java.util.Random;
 
 public class NormalDistribution extends Distribution {
 
-
 	@Override
 	public Location randomLoc() {
 		Random rand = new Random();
-		int id = rand.nextInt(graph.getEdges().size());
-		Location loc=linearInterpolation(graph.getEdges().get(id), rand.nextDouble());
-		loc.setInEdgeId(id);
+		int id = rand.nextInt(graph.getVertices().size());
+		Location loc = new Location(graph.getVertices().get(id).getLongitude(),
+				graph.getVertices().get(id).getLatitude());
+		loc.setInVertexId(id);
 		return loc;
 	}
 

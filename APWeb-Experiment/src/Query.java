@@ -15,7 +15,7 @@ public class Query implements Comparable<Query> {
 		this.qid = qid;
 		sa = 1;
 		waypoints = new ArrayList<Location>();
-		this.length = user.sphericalDistance(poi);
+		this.length = user.distanceToLoc(poi);
 	}
 
 	public double getDist() {
@@ -74,19 +74,15 @@ public class Query implements Comparable<Query> {
 		list.addAll(query.getWaypoints());
 		list.add(query.getPoi());
 		boolean userIn = false, poiIn = false;
-		for (int i = 1; i < list.size(); i++) {
-			if (user.in(list.get(i - 1), list.get(i))) {
+		for (Location loc : list) {
+			if (loc.distanceToLoc(user) < 1) {
 				userIn = true;
 			}
-			if (poi.in(list.get(i - 1), list.get(i))) {
+			if (loc.distanceToLoc(poi) < 1) {
 				poiIn = true;
 			}
 		}
-		if (userIn && poiIn) {
-			return true;
-		} else {
-			return false;
-		}
+		return userIn && poiIn;
 	}
 
 	@Override

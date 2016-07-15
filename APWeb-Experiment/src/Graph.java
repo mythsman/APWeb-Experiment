@@ -109,15 +109,15 @@ public class Graph implements Serializable {
 			Poi poi = new Poi(longitude, latitude, cnt);
 			int minId = -1;
 			double mindis = 1e9;
-			for (int i = 0; i < edges.size(); i++) {
-				double dis = poi.distanceToEdge(edges.get(i).getSvertex(), edges.get(i).getEvertex());
+			for (int i = 0; i < vertices.size(); i++) {
+				double dis = poi.distanceToLoc(vertices.get(i));
 				if (dis < mindis) {
 					mindis = dis;
 					minId = i;
 				}
 			}
-			poi.setInEdgeId(minId);
-			pois.add(poi.projection(edges.get(minId).getSvertex(), edges.get(minId).getEvertex()));
+			poi.setInVertexId(minId);
+			pois.add(poi);
 		}
 		reader.close();
 	}
@@ -143,9 +143,14 @@ public class Graph implements Serializable {
 		loadPois(new File("dataset/FoodLocations_491.txt"));
 		loadPois(new File("dataset/RestaurantLocations_320.txt"));
 		loadPois(new File("dataset/StoreLocations_619.txt"));
+
+		// int constraint = 15;
+		// while (pois.size() > constraint) {
+		// pois.remove(constraint);
+		// }
 		end = System.currentTimeMillis();
 		System.out.println("Loading " + pois.size() + " pois costs " + (end - start) + "ms.");
-		// addPatch();
+		addPatch();
 	}
 
 	int[] father;

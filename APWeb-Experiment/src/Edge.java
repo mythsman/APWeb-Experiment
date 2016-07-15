@@ -29,7 +29,7 @@ public class Edge implements Comparable<Object>, Serializable {
 		this.svertex = svertex;
 		this.evertex = evertex;
 		this.eid = eid;
-		this.length = svertex.sphericalDistance(evertex);
+		this.length = svertex.distanceToLoc(evertex);
 	}
 
 	public int getEid() {

@@ -6,13 +6,14 @@ public class GaussianDistribution extends Distribution {
 	public Location randomLoc() {
 		Random rand = new Random();
 		Double gaussian = rand.nextGaussian();
-		final double rate = 10;
+		final double rate = 5;
 		int id = -1;
-		while (id < 0 || id >= graph.getEdges().size()) {
-			id = (int) (gaussian * rate) + graph.getEdges().size() / 2;
+		while (id < 0 || id >= graph.getVertices().size()) {
+			id = (int) (gaussian * rate) + graph.getVertices().size() / 2;
 		}
-		Location loc = linearInterpolation(graph.getEdges().get(id), rand.nextDouble());
-		loc.setInEdgeId(id);
+		Location loc = new Location(graph.getVertices().get(id).getLongitude(),
+				graph.getVertices().get(id).getLatitude());
+		loc.setInVertexId(id);
 		return loc;
 	}
 

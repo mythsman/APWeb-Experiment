@@ -18,23 +18,6 @@ public abstract class Distribution {
 	}
 
 	/**
-	 * Find a location in an edge.
-	 * 
-	 * @param edge
-	 *            an edge
-	 * @param rate
-	 *            [0,1]
-	 * @return a location
-	 */
-	protected Location linearInterpolation(Edge edge, double rate) {
-		Vertex v1 = edge.getSvertex();
-		Vertex v2 = edge.getEvertex();
-		Location res = new Location((1 - rate) * v1.getLongitude() + rate * v2.getLongitude(),
-				(1 - rate) * v1.getLatitude() + rate * v2.getLatitude());
-		return res;
-	}
-
-	/**
 	 * Get a random location.
 	 * 
 	 * @return A location in the graph.

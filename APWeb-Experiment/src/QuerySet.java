@@ -2,7 +2,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 public class QuerySet {
-	private final double inf = 1e99;
+	private final double INF = 1e99;
 	private ArrayList<Query> queries;
 	private Graph graph;
 
@@ -26,51 +26,28 @@ public class QuerySet {
 	public QuerySet initPath() {
 		for (int k = 0; k < size(); k++) {
 			Query query = get(k);
-			Location start = query.getUser();
-			Location end = query.getPoi();
-
-			Vertex start1 = graph.getEdges().get(start.getInEdgeId()).getSvertex(),
-					start2 = graph.getEdges().get(start.getInEdgeId()).getEvertex();
-
-			Vertex end1 = graph.getEdges().get(end.getInEdgeId()).getSvertex(),
-					end2 = graph.getEdges().get(end.getInEdgeId()).getEvertex();
+			Location user = query.getUser();
+			Location poi = query.getPoi();
 
 			int len = graph.getVertices().size();
 			double[] dist = new double[len];
 			boolean[] vis = new boolean[len];
 			int[] before = new int[len];
 			for (int i = 0; i < len; i++) {
-				dist[i] = inf;
+				dist[i] = INF;
 				vis[i] = false;
 				before[i] = -1;
 			}
-			dist[start1.getVid()] = start1.sphericalDistance(start);
-			dist[start2.getVid()] = start2.sphericalDistance(start);
+			vis[user.getInVertexId()] = true;
 
-			vis[start1.getVid()] = true;
-			vis[start2.getVid()] = true;
-			for (int eid : start1.getNearbyEdgeId()) {
-				int vid = graph.getEdges().get(eid).except(start1).getVid();
-				if (vis[vid])
-					continue;
-				if (dist[vid] > dist[start1.getVid()] + graph.getEdges().get(eid).getLength()) {
-					dist[vid] = dist[start1.getVid()] + graph.getEdges().get(eid).getLength();
-					before[vid] = start1.getVid();
-				}
-			}
-
-			for (int eid : start2.getNearbyEdgeId()) {
-				int vid = graph.getEdges().get(eid).except(start2).getVid();
-				if (vis[vid])
-					continue;
-				if (dist[vid] > dist[start2.getVid()] + graph.getEdges().get(eid).getLength()) {
-					dist[vid] = dist[start2.getVid()] + graph.getEdges().get(eid).getLength();
-					before[vid] = start2.getVid();
-				}
+			for (int eid : graph.getVertices().get(user.getInVertexId()).getNearbyEdgeId()) {
+				int vid = graph.getEdges().get(eid).except(graph.getVertices().get(user.getInVertexId())).getVid();
+				dist[vid] = graph.getEdges().get(eid).getLength();
+				before[vid] = user.getInVertexId();
 			}
 
 			for (int cnt = 0; cnt < len; cnt++) {
-				double mindis = inf;
+				double mindis = INF;
 				int minId = -1;
 				for (int i = 0; i < len; i++) {
 					if (!vis[i] && dist[i] < mindis) {
@@ -78,7 +55,7 @@ public class QuerySet {
 						minId = i;
 					}
 				}
-				if (mindis == inf)
+				if (mindis == INF)
 					break;
 				vis[minId] = true;
 				for (int eid : graph.getVertices().get(minId).getNearbyEdgeId()) {
@@ -90,21 +67,13 @@ public class QuerySet {
 						before[vid] = minId;
 					}
 				}
-				if (vis[end1.getVid()] && vis[end2.getVid()])
+				if (vis[poi.getInVertexId()])
 					break;
 			}
-			double d1 = end1.sphericalDistance(end);
-			double d2 = end2.sphericalDistance(end);
+
 			int endVid;
-			if (dist[end1.getVid()] + d1 < dist[end2.getVid()] + d2) {
-				endVid = end1.getVid();
-				query.setDist(dist[end1.getVid()] + d1);
-			} else {
-				endVid = end2.getVid();
-				query.setDist(dist[end2.getVid()] + d2);
-			}
 			ArrayList<Location> waypoints = new ArrayList<Location>();
-			endVid = end1.getVid();
+			endVid = before[poi.getInVertexId()];
 			while (endVid != -1) {
 				waypoints.add(graph.getVertices().get(endVid));
 				endVid = before[endVid];
@@ -117,6 +86,7 @@ public class QuerySet {
 			query.setWaypoints(waypoints);
 		}
 		return this;
+
 	}
 
 	/**
