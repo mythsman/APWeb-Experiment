@@ -1,6 +1,6 @@
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Random;;
+import java.util.Random;
 
 public class LBS {
 	private Graph graph;
@@ -35,15 +35,15 @@ public class LBS {
 
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
 		LBS lbs = new LBS();
-		QuerySet querySet = lbs.getQuerySet(2, new GaussianDistribution());
+		QuerySet querySet = lbs.getQuerySet(200, new GaussianDistribution());
 		querySet.initPath();
 		querySet.initSa();
 		querySet.testSaNum();
-		querySet.setSendWindow(20);
+		querySet.setSendWindow(10);
 		querySet.mergeBySelectSort();
 		long time = 0;
 		for (int i = 0; i < querySet.size(); i++) {
-			time += Request.request(querySet.get(i));
+			time += Request.request(querySet.get(i));	
 		}
 		System.out.println(time + "ms.");
 		System.out.println("done");
