@@ -114,7 +114,7 @@ public class Location implements Serializable {
 
 	@Override
 	public String toString() {
-		return "(" + longitude + "," + latitude + ")";
+		return latitude + "," + longitude;
 	}
 
 	public static void main(String[] args) {

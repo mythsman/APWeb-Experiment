@@ -144,10 +144,10 @@ public class Graph implements Serializable {
 		loadPois(new File("dataset/RestaurantLocations_320.txt"));
 		loadPois(new File("dataset/StoreLocations_619.txt"));
 
-		// int constraint = 15;
-		// while (pois.size() > constraint) {
-		// pois.remove(constraint);
-		// }
+		int constraint = 1000;
+		while (pois.size() > constraint) {
+			pois.remove(constraint);
+		}
 		end = System.currentTimeMillis();
 		System.out.println("Loading " + pois.size() + " pois costs " + (end - start) + "ms.");
 		addPatch();
@@ -205,6 +205,5 @@ public class Graph implements Serializable {
 		Graph graph = new Graph();
 		graph.loadGraph();
 		graph.test();
-
 	}
 }

@@ -11,7 +11,7 @@ public class Clock {
 		time += System.currentTimeMillis() - start;
 	}
 
-	public static void showTime() {
-		System.out.println("Clock ticks " + time + "ms.");
+	public static void show(String s) {
+		System.out.println(s + time + "ms.");
 	}
 }

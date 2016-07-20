@@ -35,12 +35,17 @@ public class LBS {
 
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
 		LBS lbs = new LBS();
-		for (int i = 200; i <= 2000; i += 200) {
-			QuerySet querySet = lbs.getQuerySet(i, new GaussianDistribution());
-			querySet.initPath();
-			querySet.initSa();
-			querySet.testSaNum();
+		QuerySet querySet = lbs.getQuerySet(2, new GaussianDistribution());
+		querySet.initPath();
+		querySet.initSa();
+		querySet.testSaNum();
+		querySet.setSendWindow(20);
+		querySet.mergeBySelectSort();
+		long time = 0;
+		for (int i = 0; i < querySet.size(); i++) {
+			time += Request.request(querySet.get(i));
 		}
+		System.out.println(time + "ms.");
 		System.out.println("done");
 	}
 }

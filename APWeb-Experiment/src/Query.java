@@ -1,12 +1,13 @@
 import java.util.ArrayList;
 
-public class Query implements Comparable<Query> {
+public class Query {
 	private int qid;
 	private double length;
 	private int sa;
 	private Location user;
 	private Poi poi;
 	private ArrayList<Location> waypoints;
+
 	private double dist;
 
 	public Query(Location user, Poi poi, int qid) {
@@ -16,6 +17,10 @@ public class Query implements Comparable<Query> {
 		sa = 1;
 		waypoints = new ArrayList<Location>();
 		this.length = user.distanceToLoc(poi);
+	}
+
+	public Query(Location user, Poi poi) {
+		this(user, poi, -1);
 	}
 
 	public double getDist() {
@@ -44,6 +49,12 @@ public class Query implements Comparable<Query> {
 
 	public Location getUser() {
 		return user;
+	}
+
+	public void append(Query q) {
+		waypoints.add(poi);
+		waypoints.add(q.getUser());
+		poi = q.getPoi();
 	}
 
 	public Poi getPoi() {
@@ -83,16 +94,6 @@ public class Query implements Comparable<Query> {
 			}
 		}
 		return userIn && poiIn;
-	}
-
-	@Override
-	public int compareTo(Query arg0) {
-		if (this.length < arg0.getLength()) {
-			return 1;
-		} else if (this.length > arg0.getLength()) {
-			return -1;
-		} else
-			return 0;
 	}
 
 }
