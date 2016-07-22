@@ -13,7 +13,7 @@ public class Location implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private static final double LONGITUDE_RADIUS = 6378160;
 	private static final double LATITUDE_RADIUS = 4510040;
-	private int inVertexId;
+	private int vertexId;
 	protected double longitude, latitude;
 
 	/**
@@ -34,12 +34,12 @@ public class Location implements Serializable {
 		return angle * Math.PI / 180;
 	}
 
-	public int getInVertexId() {
-		return inVertexId;
+	public int getVertexId() {
+		return vertexId;
 	}
 
-	public void setInVertexId(int inVertexId) {
-		this.inVertexId = inVertexId;
+	public void setVertexId(int vertexId) {
+		this.vertexId = vertexId;
 	}
 
 	/**
@@ -49,7 +49,7 @@ public class Location implements Serializable {
 	 *            Another location
 	 * @return The spherical distance between the two locations(meters).
 	 */
-	public double distanceToLoc(Location loc) {
+	public double distance(Location loc) {
 		double x = radians(this.longitude), y = radians(this.latitude);
 		double a = radians(loc.longitude), b = radians(loc.latitude);
 		double dLon = (x - a) * LONGITUDE_RADIUS;
@@ -61,9 +61,9 @@ public class Location implements Serializable {
 		if (in(loc1, loc2)) {
 			return this;
 		} else {
-			double d1 = this.distanceToLoc(loc1);
-			double d2 = this.distanceToLoc(loc2);
-			double d = loc1.distanceToLoc(loc2);
+			double d1 = this.distance(loc1);
+			double d2 = this.distance(loc2);
+			double d = loc1.distance(loc2);
 			double cos1 = d1 * d1 + d * d - d2 * d2;
 			double cos2 = d2 * d2 + d * d - d1 * d1;
 			if (cos1 < 0) {
@@ -86,9 +86,8 @@ public class Location implements Serializable {
 		double eps = (latitude - loc1.latitude) * (longitude - loc2.latitude)
 				- (longitude - loc1.latitude) * (latitude - loc2.latitude);
 		return (latitude - loc1.latitude) * (latitude - loc2.latitude) <= 0
-				&& (longitude - loc1.longitude) * (longitude - loc2.longitude) <= 0 && eps * eps < 1e-18;
+				&& (longitude - loc1.longitude) * (longitude - loc2.longitude) <= 0 && eps * eps < 1e-12;
 
-		// return isZero(distanceToEdge(loc2, loc1));
 	}
 
 	public double getLongitude() {
@@ -120,7 +119,7 @@ public class Location implements Serializable {
 	public static void main(String[] args) {
 		Location loc = new Location(-93.277618, 44.915874);
 		Location loc1 = new Location(-93.269224, 44.960969);
-		System.out.println(loc.distanceToLoc(loc1));
+		System.out.println(loc.distance(loc1));
 	}
 
 }

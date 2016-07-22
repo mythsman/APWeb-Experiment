@@ -1,26 +1,45 @@
 import java.util.ArrayList;
 
 public class Query {
-	private int qid;
 	private double length;
 	private int sa;
 	private Location user;
-	private Poi poi;
-	private ArrayList<Location> waypoints;
-
+	private Location poi;
+	private ArrayList<Vertex> waypoints;
+	private int qid;
+	private long startTime, endTime;
 	private double dist;
 
-	public Query(Location user, Poi poi, int qid) {
-		this.user = user;
-		this.poi = poi;
-		this.qid = qid;
-		sa = 1;
-		waypoints = new ArrayList<Location>();
-		this.length = user.distanceToLoc(poi);
+	public int getQid() {
+		return qid;
 	}
 
-	public Query(Location user, Poi poi) {
-		this(user, poi, -1);
+	public void setQid(int qid) {
+		this.qid = qid;
+	}
+
+	public long getStartTime() {
+		return startTime;
+	}
+
+	public void setStartTime(long startTime) {
+		this.startTime = startTime;
+	}
+
+	public long getEndTime() {
+		return endTime;
+	}
+
+	public void setEndTime(long endTime) {
+		this.endTime = endTime;
+	}
+
+	public Query(Location user, Location poi) {
+		this.user = user;
+		this.poi = poi;
+		sa = 1;
+		waypoints = new ArrayList<Vertex>();
+		this.length = user.distance(poi);
 	}
 
 	public double getDist() {
@@ -39,10 +58,6 @@ public class Query {
 		this.sa = sa;
 	}
 
-	public int getQid() {
-		return qid;
-	}
-
 	public double getLength() {
 		return length;
 	}
@@ -52,20 +67,19 @@ public class Query {
 	}
 
 	public void append(Query q) {
-		waypoints.add(poi);
-		waypoints.add(q.getUser());
-		poi = q.getPoi();
+		// waypoints.add(poi);
+		// waypoints.add(q.getUser());
 	}
 
-	public Poi getPoi() {
+	public Location getPoi() {
 		return poi;
 	}
 
-	public ArrayList<Location> getWaypoints() {
+	public ArrayList<Vertex> getWaypoints() {
 		return waypoints;
 	}
 
-	public void setWaypoints(ArrayList<Location> waypoints) {
+	public void setWaypoints(ArrayList<Vertex> waypoints) {
 		this.waypoints = waypoints;
 	}
 
@@ -80,16 +94,13 @@ public class Query {
 	}
 
 	public boolean in(Query query) {
-		ArrayList<Location> list = new ArrayList<Location>();
-		list.add(query.getUser());
-		list.addAll(query.getWaypoints());
-		list.add(query.getPoi());
+		ArrayList<Vertex> list = query.getWaypoints();
 		boolean userIn = false, poiIn = false;
 		for (Location loc : list) {
-			if (loc.distanceToLoc(user) < 1) {
+			if (loc.distance(getWaypoints().get(0)) < 1) {
 				userIn = true;
 			}
-			if (loc.distanceToLoc(poi) < 1) {
+			if (loc.distance(getWaypoints().get(getWaypoints().size() - 1)) < 1) {
 				poiIn = true;
 			}
 		}

@@ -9,9 +9,23 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 //http://dev.virtualearth.net/REST/V1/Routes?wp.0=37.779160067439079,-122.42004945874214&wp.1=32.715685218572617,-117.16172486543655&wp.2=32.715685218572617,-117.16172486543655&key=AsZOWyYLr14AKviF4sCb1pjf6Mxp4U79toQ9hpFlAawE9V6tGnjPCq5JV4hBHIOG
-public class Request {
-	public static long request(Query q) throws IOException {
+public class Request extends Thread {
+	private Query q;
+	private long time;
 
+	public Query getQ() {
+		return q;
+	}
+
+	public long getTime() {
+		return time;
+	}
+
+	public Request(Query q) {
+		this.q = q;
+	}
+
+	public long request() throws IOException {
 		long t1 = System.currentTimeMillis();
 		String result = "";
 		BufferedReader in = null;
@@ -38,7 +52,7 @@ public class Request {
 				result += line;
 			}
 			long t2 = System.currentTimeMillis();
-			System.out.println("Response in " + (t2 - t1) + " ms.");
+			time = t2 - t1;
 			JSONObject json = new JSONObject(result);
 			JSONArray arr = json.getJSONArray("resourceSets");
 			json = arr.getJSONObject(0);
@@ -66,25 +80,34 @@ public class Request {
 			int count = 0;
 			for (int i = 0; i < raw.size(); i++) {
 				for (int j = 0; j < res.size() - 1; j++) {
-					double d = res.get(j).distanceToLoc(res.get(j + 1));
-					double d1 = raw.get(i).distanceToLoc(res.get(j));
-					double d2 = raw.get(i).distanceToLoc(res.get(j + 1));
+					double d = res.get(j).distance(res.get(j + 1));
+					double d1 = raw.get(i).distance(res.get(j));
+					double d2 = raw.get(i).distance(res.get(j + 1));
 					if (d1 + d2 - d < 20) {
 						count++;
 						break;
 					}
 				}
 			}
-			System.out.println("Target " + count + " in " + raw.size());
+			System.out.println("Target " + count / 2 + " in " + raw.size() / 2);
 			return t2 - t1;
 		} catch (Exception e) {
-			return request(q);
+			return request();
+		}
+	}
+
+	@Override
+	public void run() {
+		try {
+			System.out.println(request() + "ms");
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 
 	public static void main(String[] args) throws IOException {
 		Query q = new Query(new Location(-122.42004945874214, 37.779160067439079),
-				new Poi(-117.16172486543655, 32.715685218572617, 2));
-		request(q);
+				new Location(-117.16172486543655, 32.715685218572617));
+		new Request(q).run();
 	}
 }

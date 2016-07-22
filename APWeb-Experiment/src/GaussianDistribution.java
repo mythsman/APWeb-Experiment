@@ -6,7 +6,7 @@ public class GaussianDistribution extends Distribution {
 	public Location randomLoc() {
 		Random rand = new Random();
 		Double gaussian = rand.nextGaussian();
-		double number = 500;
+		double number = 100;
 		int id = -1;
 		while (id < 0 || id >= graph.getVertices().size()) {
 			id = (int) (gaussian * number / 6.0) + graph.getVertices().size() / 2;
@@ -15,7 +15,7 @@ public class GaussianDistribution extends Distribution {
 
 		Location loc = new Location(graph.getVertices().get(id).getLongitude(),
 				graph.getVertices().get(id).getLatitude());
-		loc.setInVertexId(id);
+		loc.setVertexId(id);
 		return loc;
 	}
 }

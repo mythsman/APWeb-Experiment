@@ -1,4 +1,5 @@
 import java.io.Serializable;
+import java.util.Random;
 
 /**
  * This class represents the edges in the graph.
@@ -6,13 +7,12 @@ import java.io.Serializable;
  * @author myths
  *
  */
-public class Edge implements Comparable<Object>, Serializable {
+public class Edge implements Serializable {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 8206488135922879477L;
-	private int eid;
 	private double length;
 	private Vertex svertex, evertex;
 
@@ -25,15 +25,17 @@ public class Edge implements Comparable<Object>, Serializable {
 	 * @param eid
 	 *            The edge's eid.
 	 */
-	public Edge(Vertex svertex, Vertex evertex, int eid) {
+	public Edge(Vertex svertex, Vertex evertex) {
 		this.svertex = svertex;
 		this.evertex = evertex;
-		this.eid = eid;
-		this.length = svertex.distanceToLoc(evertex);
+		this.length = svertex.distance(evertex);
 	}
 
-	public int getEid() {
-		return eid;
+	public Location getRandomLocation() {
+		double rand = new Random().nextDouble();
+		double longitude = rand * svertex.getLongitude() + (1 - rand) * evertex.getLongitude();
+		double latitude = rand * svertex.getLatitude() + (1 - rand) * evertex.getLatitude();
+		return new Location(longitude, latitude);
 	}
 
 	public double getLength() {
@@ -54,17 +56,6 @@ public class Edge implements Comparable<Object>, Serializable {
 		} else {
 			return evertex;
 		}
-	}
-
-	@Override
-	public int compareTo(Object o) {
-		Edge edge = (Edge) o;
-		if (this.eid < edge.eid)
-			return 1;
-		else if (this.eid < edge.eid)
-			return -1;
-		else
-			return 0;
 	}
 
 }

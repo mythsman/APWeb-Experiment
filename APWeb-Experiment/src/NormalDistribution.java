@@ -9,7 +9,7 @@ public class NormalDistribution extends Distribution {
 		int id = rand.nextInt(graph.getVertices().size());
 		Location loc = new Location(graph.getVertices().get(id).getLongitude(),
 				graph.getVertices().get(id).getLatitude());
-		loc.setInVertexId(id);
+		loc.setVertexId(id);
 		return loc;
 	}
 
