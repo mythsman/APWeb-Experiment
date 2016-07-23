@@ -20,51 +20,8 @@ public class QuerySet {
 		this.queries = queries;
 	}
 
-	public static QuerySet generateQuerySet(Graph graph, int size, int bells, int scale) {
-		QuerySet qs = new QuerySet();
-		int[] sizeofBells = new int[bells];
-		double k = 0;
-		for (int i = 1; i <= bells; i++) {
-			k += 1.0 / i;
-		}
-		int remain = size;
-		for (int i = 0; i < bells; i++) {
-			sizeofBells[i] = (int) (size * 1.0 / k / (1 + i));
-			remain -= sizeofBells[i];
-		}
-		sizeofBells[bells - 1] += remain;
-		for (int i = 0; i < bells; i++) {
-			qs.queries.addAll(generateQuerySet(graph, sizeofBells[i], scale).getQueries());
-		}
-		for (int i = 0; i < qs.queries.size(); i++) {
-			qs.queries.get(i).setQid(i);
-		}
-		return qs;
-	}
 
-	private static QuerySet generateQuerySet(Graph graph, int size, int scale) {
-		QuerySet qs = new QuerySet();
-		Random rand = new Random();
-		int centerId = rand.nextInt(graph.getVertices().size());
-		for (int i = 0; i < size; i++) {
-			double gaussian = rand.nextGaussian();
-			int startId = centerId + (int) (gaussian * scale);
-			while (startId < 0) {
-				startId += graph.getVertices().size();
-			}
-			while (startId >= graph.getVertices().size()) {
-				startId -= graph.getVertices().size();
-			}
-			int endId = rand.nextInt(graph.getPois().size());
-			ArrayList<Integer> edgeIds = graph.getVertices().get(startId).getNearbyEdgeId();
-			Location user = graph.getEdges().get(edgeIds.get(rand.nextInt(edgeIds.size()))).getRandomLocation();
-			Query q = new Query(user, graph.getPois().get(endId));
-			q.getWaypoints().add(graph.getVertices().get(startId));
-			q.getWaypoints().add(graph.getVertices().get(graph.getPois().get(endId).getVertexId()));
-			qs.getQueries().add(q);
-		}
-		return qs;
-	}
+
 
 	public Query get(int i) {
 		return queries.get(i);

@@ -1,5 +1,8 @@
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
 
 public class LBS {
 	private Graph graph;
@@ -19,13 +22,96 @@ public class LBS {
 		graph.loadGraph();
 	}
 
+	public QuerySet generateQuerySet(int size, int bells, int scale) {
+		Clock.getClock("GenerateQuerySet").start();
+		QuerySet qs = new QuerySet();
+		int[] sizeofBells = new int[bells];
+		double k = 0;
+		for (int i = 1; i <= bells; i++) {
+			k += 1.0 / i;
+		}
+		int remain = size;
+		for (int i = 0; i < bells; i++) {
+			sizeofBells[i] = (int) (size * 1.0 / k / (1 + i));
+			remain -= sizeofBells[i];
+		}
+		sizeofBells[bells - 1] += remain;
+		for (int i = 0; i < bells; i++) {
+			qs.getQueries().addAll(generateQuerySet(sizeofBells[i], scale).getQueries());
+		}
+		for (int i = 0; i < qs.getQueries().size(); i++) {
+			qs.getQueries().get(i).setQid(i);
+		}
+		Clock.getClock("GenerateQuerySet").end();
+		Clock.getClock("GenerateQuerySet").show("Generate QuerySet in ");
+		return qs;
+	}
+
+	// private QuerySet generateQuerySet(int size, int scale) {
+	// QuerySet qs = new QuerySet();
+	// Random rand = new Random();
+	// int centerId = rand.nextInt(graph.getVertices().size());
+	// for (int i = 0; i < size; i++) {
+	// double gaussian = rand.nextGaussian();
+	// int startId = centerId + (int) (gaussian * scale);
+	// while (startId < 0) {
+	// startId += graph.getVertices().size();
+	// }
+	// while (startId >= graph.getVertices().size()) {
+	// startId -= graph.getVertices().size();
+	// }
+	// int endId = rand.nextInt(graph.getPois().size());
+	// ArrayList<Integer> edgeIds =
+	// graph.getVertices().get(startId).getNearbyEdgeId();
+	// Location user =
+	// graph.getEdges().get(edgeIds.get(rand.nextInt(edgeIds.size()))).getRandomLocation();
+	// Query q = new Query(user, graph.getPois().get(endId));
+	// q.getWaypoints().add(graph.getVertices().get(startId));
+	// q.getWaypoints().add(graph.getVertices().get(graph.getPois().get(endId).getVertexId()));
+	// qs.getQueries().add(q);
+	// }
+	// return qs;
+	// }
+	private QuerySet generateQuerySet(int size, int scale) {
+		QuerySet qs = new QuerySet();
+		Random rand = new Random();
+		int centerId = rand.nextInt(graph.getVertices().size());
+		List<SortItem> list = new ArrayList<SortItem>();
+		for (int i = 0; i < graph.getVertices().size(); i++) {
+			SortItem item = new SortItem(i, graph.getVertices().get(i).distance(graph.getVertices().get(centerId)));
+			list.add(item);
+		}
+		Collections.sort(list);
+		for (int i = 0; i < size; i++) {
+			double gaussian = rand.nextGaussian();
+			if (gaussian < 0)
+				gaussian = -gaussian;
+
+			int startId = centerId + list.get((int) (gaussian * scale)).getVid();
+			while (startId < 0) {
+				startId += graph.getVertices().size();
+			}
+			while (startId >= graph.getVertices().size()) {
+				startId -= graph.getVertices().size();
+			}
+			int endId = rand.nextInt(graph.getPois().size());
+			ArrayList<Integer> edgeIds = graph.getVertices().get(startId).getNearbyEdgeId();
+			Location user = graph.getEdges().get(edgeIds.get(rand.nextInt(edgeIds.size()))).getRandomLocation();
+			Query q = new Query(user, graph.getPois().get(endId));
+			q.getWaypoints().add(graph.getVertices().get(startId));
+			q.getWaypoints().add(graph.getVertices().get(graph.getPois().get(endId).getVertexId()));
+			qs.getQueries().add(q);
+		}
+		return qs;
+	}
+
 	public void dijikstra(QuerySet qs) {
-		Clock.start();
+		Clock.getClock("dijikstra").start();
 		for (Query q : qs.getQueries()) {
 			dijikstra(q);
 		}
-		Clock.end();
-		Clock.show("Dijikstra in ");
+		Clock.getClock("dijikstra").end();
+		Clock.getClock("dijikstra").show("Dijikstra in ");
 	}
 
 	public void dijikstra(Query q) {
@@ -87,7 +173,7 @@ public class LBS {
 	}
 
 	public void initSa(QuerySet qs) {
-		Clock.start();
+		Clock.getClock("initSa").start();
 		for (int i = 0; i < qs.size(); i++) {
 			if (qs.get(i).getSa() == -1)
 				continue;
@@ -103,104 +189,31 @@ public class LBS {
 				}
 			}
 		}
-		Clock.end();
+		Clock.getClock("initSa").end();
 		int cnt = 0;
 		for (Query q : qs.getQueries()) {
 			if (q.getSa() == -1) {
 				cnt++;
 			}
 		}
-		Clock.show("InitSa in ", ", with " + cnt + "/" + qs.size() + " Shared.");
+		Clock.getClock("initSa").show("InitSa in ", ", with " + (qs.size() - cnt) + "/" + qs.size() + " left.");
 	}
 
-	public ArrayList<LocationList> mergeByGreedy(QuerySet qs) {
-		Clock.start();
-		qs.sortByLengthDes();
-		ArrayList<LocationList> locLists = new ArrayList<LocationList>();
-		boolean[] vis = new boolean[qs.getQueries().size()];
-		for (int i = 0; i < qs.getQueries().size(); i++) {
-			if (qs.getQueries().get(i).getSa() == -1)
-				vis[i] = true;
-			else
-				vis[i] = false;
-		}
-
-		while (true) {
-			LocationList llist = new LocationList();
-			int cnt = 0;
-			for (int i = 0; i < qs.getQueries().size(); i++) {
-				if (vis[i])
-					continue;
-				llist.add(qs.getQueries().get(i).getWaypoints().get(0));
-				llist.add(qs.getQueries().get(i).getWaypoints().get(qs.getQueries().get(i).getWaypoints().size() - 1));
-				vis[i] = true;
-				cnt += 2;
-				if (cnt + 2 > wp)
-					break;
-			}
-			if (cnt == 0)
-				break;
-			for (int i = 1; i + 1 < llist.size(); i += 2) {
-				Vertex start = llist.get(i);
-				Vertex end = llist.get(i + 1);
-				Query tmp = new Query(start, end);
-				tmp.getWaypoints().add(start);
-				tmp.getWaypoints().add(end);
-				dijikstra(tmp);
-				for (int j = 0; j < qs.getQueries().size(); j++) {
-					if (vis[j])
-						continue;
-					if (qs.getQueries().get(j).in(tmp)) {
-						vis[j] = true;
-					}
-				}
-			}
-
-			locLists.add(llist);
-		}
-		Clock.end();
-		int cnt = 0;
-		for (int i = 0; i < locLists.size(); i++) {
-			cnt += locLists.get(i).size();
-		}
-		Clock.show("MergeByGreedy in ", " with " + cnt / 2 + " queries left.");
-		return locLists;
-
-	}
-
-	public ArrayList<LocationList> directMerge(QuerySet qs) {
-		Clock.start();
-		ArrayList<LocationList> res = new ArrayList<LocationList>();
-		int cnt = 0;
-		LocationList list = new LocationList();
-		while (cnt < qs.size()) {
-			if (qs.getQueries().get(cnt).getSa() == -1) {
-				cnt++;
-				if (cnt >= qs.size()) {
-					res.add(list);
-					list = new LocationList();
-				}
-				continue;
-			}
-			list.add(qs.getQueries().get(cnt).getWaypoints().get(0));
-			list.add(qs.getQueries().get(cnt).getWaypoints().get(qs.getQueries().get(cnt).getWaypoints().size() - 1));
-			cnt++;
-			if (list.size() + 2 > wp || cnt >= qs.size()) {
-				res.add(list);
-				list = new LocationList();
+	public boolean nextPermutation(ArrayList<Integer> arr) {
+		boolean mod = false;
+		for (int i = 0; i < arr.size() - 1; i++) {
+			if (arr.get(i) > arr.get(i + 1)) {
+				int swp = arr.get(i);
+				arr.set(i, arr.get(i + 1));
+				arr.set(i + 1, swp);
+				mod = true;
 			}
 		}
-		Clock.end();
-		cnt = 0;
-		for (int i = 0; i < res.size(); i++) {
-			cnt += res.get(i).size();
-		}
-		Clock.show("DirectMerge in ", " with " + cnt / 2 + " queries left.");
-		return res;
+		return mod;
 	}
 
 	public ArrayList<LocationList> mergeBySelectSort(QuerySet qs) {
-		Clock.start();
+		Clock.getClock("mergeBySelectSort").start();
 		qs.sortBySaDesc();
 		ArrayList<LocationList> locLists = new ArrayList<LocationList>();
 		boolean[] vis = new boolean[qs.getQueries().size()];
@@ -225,28 +238,34 @@ public class LBS {
 			}
 			if (cnt == 0)
 				break;
-			int num = 1;
+
+			Clock.getClock("mergeBySelectSort").end();
+			Clock.getClock("inDijikstra2").start();
+			Query[][] queries = new Query[llist.size() / 2][llist.size() / 2];
 			for (int i = 0; i < llist.size() / 2; i++) {
-				num *= 2;
-			}
-			int ansTest = 0;
-			int maxSa = 0;
-			for (int test = 0; test < num; test++) {
-				for (int k = 0; k < llist.size() / 2; k++) {
-					if (((1 << k) & test) != 0) {
-						Vertex tmp = llist.getList().get(2 * k);
-						llist.getList().set(2 * k, llist.getList().get(2 * k + 1));
-						llist.getList().set(2 * k + 1, tmp);
-					}
-				}
-				int cc = 0;
-				for (int i = 1; i + 1 < llist.size(); i += 2) {
-					Vertex start = llist.get(i);
-					Vertex end = llist.get(i + 1);
+				for (int j = 0; j < llist.size() / 2; j++) {
+					Vertex start = llist.get(2 * i + 1);
+					Vertex end = llist.get(2 * j);
 					Query tmp = new Query(start, end);
 					tmp.getWaypoints().add(start);
 					tmp.getWaypoints().add(end);
 					dijikstra(tmp);
+					queries[i][j] = tmp;
+				}
+			}
+			Clock.getClock("inDijikstra2").end();
+			Clock.getClock("mergeBySelectSort").start();
+			ArrayList<Integer> arr = new ArrayList<Integer>();
+			ArrayList<Integer> res = new ArrayList<Integer>();
+			for (int i = 0; i < llist.size() / 2; i++) {
+				arr.add(i);
+				res.add(i);
+			}
+			int maxi = 0;
+			do {
+				int cc = 0;
+				for (int i = 0; i < llist.size() / 2 - 1; i++) {
+					Query tmp = queries[arr.get(i)][arr.get(i + 1)];
 					for (int j = 0; j < qs.getQueries().size(); j++) {
 						if (vis[j])
 							continue;
@@ -255,60 +274,118 @@ public class LBS {
 						}
 					}
 				}
-				if (cc > maxSa) {
-					ansTest = test;
-				}
-				for (int k = 0; k < llist.size() / 2; k++) {
-					if (((1 << k) & test) != 0) {
-						Vertex tmp = llist.getList().get(2 * k);
-						llist.getList().set(2 * k, llist.getList().get(2 * k + 1));
-						llist.getList().set(2 * k + 1, tmp);
+				if (cc > maxi) {
+					for (int i = 0; i < llist.size() / 2; i++) {
+						res.set(i, arr.get(i));
 					}
 				}
+			} while (nextPermutation(arr));
+			LocationList newList = new LocationList();
+			for (int i = 0; i < llist.size() / 2 - 1; i++) {
+				newList.add(llist.get(2 * res.get(i)));
+				newList.add(llist.get(2 * res.get(i) + 1));
 			}
-			for (int k = 0; k < llist.size() / 2; k++) {
-				if (((1 << k) & ansTest) != 0) {
-					Vertex tmp = llist.getList().get(2 * k);
-					llist.getList().set(2 * k, llist.getList().get(2 * k + 1));
-					llist.getList().set(2 * k + 1, tmp);
-				}
-			}
-			for (int i = 1; i + 1 < llist.size(); i += 2) {
-				Vertex start = llist.get(i);
-				Vertex end = llist.get(i + 1);
-				Query tmp = new Query(start, end);
-				tmp.getWaypoints().add(start);
-				tmp.getWaypoints().add(end);
-				dijikstra(tmp);
-				for (int j = 0; j < qs.getQueries().size(); j++) {
-					if (vis[j])
-						continue;
-					if (qs.getQueries().get(j).in(tmp)) {
-						vis[j] = true;
-					}
-				}
-			}
+			llist = newList;
+
 			locLists.add(llist);
 		}
-		qs.sortByQidAsc();
-		Clock.end();
+		Clock.getClock("mergeBySelectSort").end();
 		int cnt = 0;
 		for (int i = 0; i < locLists.size(); i++) {
 			cnt += locLists.get(i).size();
 		}
-		Clock.show("MergeByGreedy in ", " with " + cnt / 2 + " queries left.");
+		Clock.getClock("mergeBySelectSort").show("mergeBySelectSort in ",
+				" with " + cnt / 2 + "/" + qs.size() + " queries left.");
+		Clock.getClock("inDijikstra2").show("inDijikstra2 in ");
 		return locLists;
 	}
 
-	public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
+	public ArrayList<LocationList> mergeByGreedy(QuerySet qs) {
+		Clock.getClock("directMerge").start();
+		ArrayList<LocationList> res = new ArrayList<LocationList>();
+		int cnt = 0;
+		LocationList list = new LocationList();
+		while (cnt < qs.size()) {
+			if (qs.getQueries().get(cnt).getSa() == -1) {
+				cnt++;
+				if (cnt >= qs.size()) {
+					res.add(list);
+					list = new LocationList();
+				}
+				continue;
+			}
+			list.add(qs.getQueries().get(cnt).getWaypoints().get(0));
+			list.add(qs.getQueries().get(cnt).getWaypoints().get(qs.getQueries().get(cnt).getWaypoints().size() - 1));
+			cnt++;
+			if (list.size() + 2 > wp || cnt >= qs.size()) {
+				res.add(list);
+				list = new LocationList();
+			}
+		}
+		Clock.getClock("directMerge").end();
+		cnt = 0;
+		for (int i = 0; i < res.size(); i++) {
+			cnt += res.get(i).size();
+		}
+		Clock.getClock("directMerge").show("DirectMerge in ", " with " + cnt / 2 + "/" + qs.size() + " queries left.");
+		return res;
+	}
 
+	public void request(QuerySet qs, ArrayList<LocationList> list, int par) throws InterruptedException {
+		Clock.getClock("Request").start();
+		Request[] req = new Request[list.size()];
+		for (int i = 0; i < list.size(); i++) {
+			req[i] = new Request(list.get(i));
+			req[i].start();
+			if ((i + 1) % par == 0) {
+				for (int j = i - par + 1; j <= i; j++) {
+					req[j].join();
+				}
+			}
+		}
+		for (int i = 0; i < list.size(); i++) {
+			req[i].join();
+		}
+
+		int cnt = 0;
+		for (int i = 0; i < qs.size(); i++) {
+			Vertex start = qs.getQueries().get(i).getWaypoints().get(0);
+			Vertex end = qs.getQueries().get(i).getWaypoints().get(qs.getQueries().get(i).getWaypoints().size() - 1);
+			boolean startIn = false, endIn = false;
+			for (LocationList llist : list) {
+				for (int j = 0; j < llist.size() - 1; j++) {
+					double d = llist.get(j).distance(llist.get(j + 1));
+					double d1 = llist.get(j).distance(start);
+					double d2 = llist.get(j + 1).distance(start);
+					if (d1 + d2 - d <= 10) {
+						startIn = true;
+					}
+					d1 = llist.get(j).distance(end);
+					d2 = llist.get(j + 1).distance(end);
+					if (d1 + d2 - d <= 20) {
+						endIn = true;
+					}
+				}
+			}
+			if (startIn && endIn)
+				cnt++;
+		}
+		System.out.println("Target " + cnt + "/" + qs.size());
+		Clock.getClock("Request").end();
+		Clock.getClock("Request").show("Request totally in ");
+	}
+
+	public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
 		LBS lbs = new LBS();
-		QuerySet qs = QuerySet.generateQuerySet(lbs.graph, 5000, 10, 10);
+		QuerySet qs = lbs.generateQuerySet(2000, 10, 10);
 		lbs.dijikstra(qs);
 		lbs.initSa(qs);
-		lbs.mergeByGreedy(qs);
-		lbs.directMerge(qs);
-		lbs.mergeBySelectSort(qs);
+		lbs.setMaxPointNum(10);
+		ArrayList<LocationList> list;
+		list = lbs.mergeBySelectSort(qs);
+		lbs.request(qs, list, 300);
+		list = lbs.mergeByGreedy(qs);
+		lbs.request(qs, list, 300);
 		System.out.println("done");
 	}
 }
