@@ -1,4 +1,9 @@
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -47,31 +52,6 @@ public class LBS {
 		return qs;
 	}
 
-	// private QuerySet generateQuerySet(int size, int scale) {
-	// QuerySet qs = new QuerySet();
-	// Random rand = new Random();
-	// int centerId = rand.nextInt(graph.getVertices().size());
-	// for (int i = 0; i < size; i++) {
-	// double gaussian = rand.nextGaussian();
-	// int startId = centerId + (int) (gaussian * scale);
-	// while (startId < 0) {
-	// startId += graph.getVertices().size();
-	// }
-	// while (startId >= graph.getVertices().size()) {
-	// startId -= graph.getVertices().size();
-	// }
-	// int endId = rand.nextInt(graph.getPois().size());
-	// ArrayList<Integer> edgeIds =
-	// graph.getVertices().get(startId).getNearbyEdgeId();
-	// Location user =
-	// graph.getEdges().get(edgeIds.get(rand.nextInt(edgeIds.size()))).getRandomLocation();
-	// Query q = new Query(user, graph.getPois().get(endId));
-	// q.getWaypoints().add(graph.getVertices().get(startId));
-	// q.getWaypoints().add(graph.getVertices().get(graph.getPois().get(endId).getVertexId()));
-	// qs.getQueries().add(q);
-	// }
-	// return qs;
-	// }
 	private QuerySet generateQuerySet(int size, int scale) {
 		QuerySet qs = new QuerySet();
 		Random rand = new Random();
@@ -286,7 +266,6 @@ public class LBS {
 				newList.add(llist.get(2 * res.get(i) + 1));
 			}
 			llist = newList;
-
 			locLists.add(llist);
 		}
 		Clock.getClock("mergeBySelectSort").end();
@@ -306,14 +285,7 @@ public class LBS {
 		int cnt = 0;
 		LocationList list = new LocationList();
 		while (cnt < qs.size()) {
-			if (qs.getQueries().get(cnt).getSa() == -1) {
-				cnt++;
-				if (cnt >= qs.size()) {
-					res.add(list);
-					list = new LocationList();
-				}
-				continue;
-			}
+
 			list.add(qs.getQueries().get(cnt).getWaypoints().get(0));
 			list.add(qs.getQueries().get(cnt).getWaypoints().get(qs.getQueries().get(cnt).getWaypoints().size() - 1));
 			cnt++;
@@ -343,16 +315,24 @@ public class LBS {
 				}
 			}
 		}
-		for (int i = 0; i < list.size(); i++) {
+		for (int i = list.size() - 1;; i--) {
+			if ((i + 1) % par == 0)
+				break;
 			req[i].join();
+		}
+		ArrayList<LocationList> res = new ArrayList<LocationList>();
+		for (int i = 0; i < list.size(); i++) {
+			res.add(req[i].getRes());
 		}
 
 		int cnt = 0;
+		ArrayList<Integer> loss = new ArrayList<Integer>();
 		for (int i = 0; i < qs.size(); i++) {
 			Vertex start = qs.getQueries().get(i).getWaypoints().get(0);
 			Vertex end = qs.getQueries().get(i).getWaypoints().get(qs.getQueries().get(i).getWaypoints().size() - 1);
-			boolean startIn = false, endIn = false;
-			for (LocationList llist : list) {
+			boolean target = false;
+			for (LocationList llist : res) {
+				boolean startIn = false, endIn = false;
 				for (int j = 0; j < llist.size() - 1; j++) {
 					double d = llist.get(j).distance(llist.get(j + 1));
 					double d1 = llist.get(j).distance(start);
@@ -366,26 +346,63 @@ public class LBS {
 						endIn = true;
 					}
 				}
+				if (startIn && endIn) {
+					cnt++;
+					target = true;
+					qs.get(i).setRequestTime(llist.getResponseTime());
+				}
 			}
-			if (startIn && endIn)
-				cnt++;
+			if (!target)
+				loss.add(i);
 		}
 		System.out.println("Target " + cnt + "/" + qs.size());
+		System.out.println(loss);
 		Clock.getClock("Request").end();
 		Clock.getClock("Request").show("Request totally in ");
+
+		Request[] subReq = new Request[loss.size()];
+		for (int i = 0; i < loss.size(); i++) {
+			LocationList addList = new LocationList();
+			addList.add(qs.getQueries().get(loss.get(i)).getWaypoints().get(0));
+			addList.add(qs.getQueries().get(loss.get(i)).getWaypoints()
+					.get(qs.getQueries().get(loss.get(i)).getWaypoints().size() - 1));
+			subReq[i] = new Request(addList);
+			subReq[i].start();
+		}
+		for (int i = 0; i < loss.size(); i++) {
+			subReq[i].join();
+			qs.getQueries().get(loss.get(i)).setRequestTime(subReq[i].getTime() + Clock.getClock("Request").getTime());
+		}
+	}
+
+	public void writeQuerySet(String path, int size, int bells, int scale) throws IOException {
+		ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(new File(path)));
+		QuerySet qs = generateQuerySet(size, bells, scale);
+		out.writeObject(qs);
+		out.flush();
+		out.close();
+	}
+
+	public QuerySet readQuerySet(String path) throws IOException, ClassNotFoundException {
+		ObjectInputStream in = new ObjectInputStream(new FileInputStream(new File(path)));
+		QuerySet qs = (QuerySet) in.readObject();
+		in.close();
+		return qs;
 	}
 
 	public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
 		LBS lbs = new LBS();
-		QuerySet qs = lbs.generateQuerySet(2000, 10, 10);
+		QuerySet qs = lbs.generateQuerySet(200, 10, 10);
 		lbs.dijikstra(qs);
 		lbs.initSa(qs);
 		lbs.setMaxPointNum(10);
 		ArrayList<LocationList> list;
 		list = lbs.mergeBySelectSort(qs);
+		// list = lbs.mergeByGreedy(qs);
 		lbs.request(qs, list, 300);
-		list = lbs.mergeByGreedy(qs);
-		lbs.request(qs, list, 300);
+		for (Query q : qs.getQueries()) {
+			System.out.println(q.getRequestTime());
+		}
 		System.out.println("done");
 	}
 }

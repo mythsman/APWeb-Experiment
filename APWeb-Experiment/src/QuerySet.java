@@ -1,10 +1,15 @@
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Random;
 
-public class QuerySet {
+public class QuerySet implements Serializable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -1096428460049959612L;
 	private ArrayList<Query> queries;
 	private int waypointsNum = 10;
 
@@ -19,9 +24,6 @@ public class QuerySet {
 	public void setQueries(ArrayList<Query> queries) {
 		this.queries = queries;
 	}
-
-
-
 
 	public Query get(int i) {
 		return queries.get(i);

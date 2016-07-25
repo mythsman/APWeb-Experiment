@@ -1,13 +1,18 @@
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Query {
+public class Query implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -9083546139459335909L;
 	private double length;
 	private int sa;
 	private Location user;
 	private Location poi;
 	private ArrayList<Vertex> waypoints;
 	private int qid;
-	private long startTime, endTime;
+	private long requestTime;
 	private double dist;
 
 	public int getQid() {
@@ -18,20 +23,12 @@ public class Query {
 		this.qid = qid;
 	}
 
-	public long getStartTime() {
-		return startTime;
+	public long getRequestTime() {
+		return requestTime;
 	}
 
-	public void setStartTime(long startTime) {
-		this.startTime = startTime;
-	}
-
-	public long getEndTime() {
-		return endTime;
-	}
-
-	public void setEndTime(long endTime) {
-		this.endTime = endTime;
+	public void setRequestTime(long requestTime) {
+		this.requestTime = requestTime;
 	}
 
 	public Query(Location user, Location poi) {

@@ -3,6 +3,16 @@ import java.util.ArrayList;
 public class LocationList {
 	private ArrayList<Vertex> list;
 
+	private long responseTime;
+
+	public long getResponseTime() {
+		return responseTime;
+	}
+
+	public void setResponseTime(long responseTime) {
+		this.responseTime = responseTime;
+	}
+
 	public LocationList() {
 		list = new ArrayList<Vertex>();
 	}

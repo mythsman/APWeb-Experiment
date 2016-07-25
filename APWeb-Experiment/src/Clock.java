@@ -11,7 +11,7 @@ public class Clock {
 		this.name = name;
 	}
 
-	public static Clock getClock(String name) {
+	public synchronized static Clock getClock(String name) {
 
 		if (map.containsKey(name)) {
 			return map.get(name);
@@ -44,5 +44,9 @@ public class Clock {
 
 	public void show(String s, String s2) {
 		System.out.println(s + time + "ms" + s2);
+	}
+
+	public long getTime() {
+		return time;
 	}
 }

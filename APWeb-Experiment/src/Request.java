@@ -3,7 +3,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.ArrayList;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -12,7 +11,7 @@ import org.json.JSONObject;
 public class Request extends Thread {
 	private LocationList list;
 	private long time;
-	private ArrayList<Location> res;
+	private LocationList res;
 
 	public long getTime() {
 		return time;
@@ -20,30 +19,50 @@ public class Request extends Thread {
 
 	public Request(LocationList q) {
 		this.list = q;
-		res = new ArrayList<Location>();
+		res = new LocationList();
+	}
+
+	public static String[] urls = { "AsZOWyYLr14AKviF4sCb1pjf6Mxp4U79toQ9hpFlAawE9V6tGnjPCq5JV4hBHIOG",
+			"AiF5rjhPwqK8UOyzmg8yxFqILQcRouLZiz8JeoEORTRGzpFjAnriYJoRg49KgctN",
+			"AvBMPrSwSYiANzMNuBvzk3zEfv1jGbGSmTr9wU7Tv_qiXTVDdH5nKDnaUJQlJ3vP",
+			"ApPND2d30kmDtW6AFDYOCNcIBu753PHSYuMtTmfBvIfa7Airtlejo8YLZqYBKWD1",
+			"Apenr-qQjqHmaKqELsCTx3MD9KrqqIJvkDv-xcRVJcDK09SYJwWmIA40z2jNiqik",
+			"AutcsYM3LnXhou46MImyJFSieb_gHzk_OFfNkd3VJb7EH5y5hMdCRwCt_Qalm5ef", };
+
+	public static int keyNum = 0;
+
+	public synchronized String getUrl() {
+		String res = urls[keyNum];
+		keyNum++;
+		if (keyNum >= urls.length) {
+			keyNum = 0;
+		}
+		return res;
 	}
 
 	public void request() throws IOException {
-
+		Clock clock = Clock.getClock(list.toString());
+		clock.start();
 		String result = "";
 		BufferedReader in = null;
 
 		String url = "http://dev.virtualearth.net/REST/V1/Routes?";
+
 		for (int i = 0; i < list.size(); i++) {
 			url += "wp." + i + "=" + list.get(i).toString() + "&";
 		}
-		url += "key=AiF5rjhPwqK8UOyzmg8yxFqILQcRouLZiz8JeoEORTRGzpFjAnriYJoRg49KgctN";
-		
-		//url += "key=AsZOWyYLr14AKviF4sCb1pjf6Mxp4U79toQ9hpFlAawE9V6tGnjPCq5JV4hBHIOG";
+		url += "key=" + getUrl();
 		URL realUrl = new URL(url);
 
 		URLConnection connection = realUrl.openConnection();
 		connection.setRequestProperty("accept", "*/*");
 		connection.setRequestProperty("connection", "Keep-Alive");
 		connection.setRequestProperty("user-agent", "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1;SV1)");
+
 		connection.connect();
+
 		try {
-			Clock.getClock(list.toString()).start();
+
 			in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 			String line;
 			while ((line = in.readLine()) != null) {
@@ -55,7 +74,6 @@ public class Request extends Thread {
 			arr = json.getJSONArray("resources");
 			json = arr.getJSONObject(0);
 			arr = json.getJSONArray("routeLegs");
-			res.clear();
 			for (int i = 0; i < arr.length() - 1; i++) {
 				json = arr.getJSONObject(i);
 				JSONArray end = json.getJSONObject("actualEnd").getJSONArray("coordinates");
@@ -63,14 +81,15 @@ public class Request extends Thread {
 						.parseDouble(end.toString().substring(1, end.toString().length() - 1).split(",")[0]);
 				double longitude = Double
 						.parseDouble(end.toString().substring(1, end.toString().length() - 1).split(",")[1]);
-				res.add(new Location(longitude, latitude));
+				res.add(new Vertex(longitude, latitude, -1));
 			}
-			Clock.getClock(list.toString()).end();
-			Clock.getClock(list.toString()).show("Request in ");
+
 		} catch (Exception e) {
 			e.printStackTrace();
-			request();
 		}
+		clock.end();
+		res.setResponseTime(clock.getTime());
+		//clock.show("Request in ");
 	}
 
 	@Override
@@ -82,7 +101,7 @@ public class Request extends Thread {
 		}
 	}
 
-	public ArrayList<Location> getRes() {
+	public LocationList getRes() {
 		return res;
 	}
 
