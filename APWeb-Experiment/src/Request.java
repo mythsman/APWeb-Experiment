@@ -89,7 +89,8 @@ public class Request extends Thread {
 		}
 		clock.end();
 		res.setResponseTime(clock.getTime());
-		//clock.show("Request in ");
+		list.setResponseTime(clock.getTime());
+		// clock.show("Request in ");
 	}
 
 	@Override

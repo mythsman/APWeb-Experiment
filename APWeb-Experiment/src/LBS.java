@@ -8,6 +8,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class LBS {
 	private Graph graph;
@@ -27,7 +30,8 @@ public class LBS {
 		graph.loadGraph();
 	}
 
-	public QuerySet generateQuerySet(int size, int bells, int scale) {
+	public QuerySet generateQuerySet(int size, int bells, int scale, int maxPointNum) {
+		this.setMaxPointNum(maxPointNum);
 		Clock.getClock("GenerateQuerySet").start();
 		QuerySet qs = new QuerySet();
 		int[] sizeofBells = new int[bells];
@@ -47,6 +51,8 @@ public class LBS {
 		for (int i = 0; i < qs.getQueries().size(); i++) {
 			qs.getQueries().get(i).setQid(i);
 		}
+		dijikstra(qs);
+		initSa(qs);
 		Clock.getClock("GenerateQuerySet").end();
 		Clock.getClock("GenerateQuerySet").show("Generate QuerySet in ");
 		return qs;
@@ -91,7 +97,7 @@ public class LBS {
 			dijikstra(q);
 		}
 		Clock.getClock("dijikstra").end();
-		Clock.getClock("dijikstra").show("Dijikstra in ");
+		// Clock.getClock("dijikstra").show("Dijikstra in ");
 	}
 
 	public void dijikstra(Query q) {
@@ -176,7 +182,8 @@ public class LBS {
 				cnt++;
 			}
 		}
-		Clock.getClock("initSa").show("InitSa in ", ", with " + (qs.size() - cnt) + "/" + qs.size() + " left.");
+		// Clock.getClock("initSa").show("InitSa in ", ", with " + (qs.size() -
+		// cnt) + "/" + qs.size() + " left.");
 	}
 
 	public boolean nextPermutation(ArrayList<Integer> arr) {
@@ -273,9 +280,11 @@ public class LBS {
 		for (int i = 0; i < locLists.size(); i++) {
 			cnt += locLists.get(i).size();
 		}
-		Clock.getClock("mergeBySelectSort").show("mergeBySelectSort in ",
-				" with " + cnt / 2 + "/" + qs.size() + " queries left.");
-		Clock.getClock("inDijikstra2").show("inDijikstra2 in ");
+		// Clock.getClock("mergeBySelectSort").show("mergeBySelectSort in ",
+		// " with " + cnt / 2 + "/" + qs.size() + " queries left.");
+		// Clock.getClock("inDijikstra2").show("inDijikstra2 in ");
+		System.out.println("Preprocessing in "
+				+ (Clock.getClock("mergeBySelectSort").getTime() + Clock.getClock("inDijikstra2").getTime()) + " ms .");
 		return locLists;
 	}
 
@@ -285,7 +294,6 @@ public class LBS {
 		int cnt = 0;
 		LocationList list = new LocationList();
 		while (cnt < qs.size()) {
-
 			list.add(qs.getQueries().get(cnt).getWaypoints().get(0));
 			list.add(qs.getQueries().get(cnt).getWaypoints().get(qs.getQueries().get(cnt).getWaypoints().size() - 1));
 			cnt++;
@@ -299,33 +307,27 @@ public class LBS {
 		for (int i = 0; i < res.size(); i++) {
 			cnt += res.get(i).size();
 		}
-		Clock.getClock("directMerge").show("DirectMerge in ", " with " + cnt / 2 + "/" + qs.size() + " queries left.");
+		// Clock.getClock("directMerge").show("DirectMerge in ", " with " + cnt
+		// / 2 + "/" + qs.size() + " queries left.");
+		Clock.getClock("directMerge").show("Preprocessing in ");
 		return res;
 	}
 
 	public void request(QuerySet qs, ArrayList<LocationList> list, int par) throws InterruptedException {
 		Clock.getClock("Request").start();
+		ExecutorService fixedThreadPool = Executors.newFixedThreadPool(par);
 		Request[] req = new Request[list.size()];
 		for (int i = 0; i < list.size(); i++) {
 			req[i] = new Request(list.get(i));
-			req[i].start();
-			if ((i + 1) % par == 0) {
-				for (int j = i - par + 1; j <= i; j++) {
-					req[j].join();
-				}
-			}
+			fixedThreadPool.execute(req[i]);
 		}
-		for (int i = list.size() - 1;; i--) {
-			if ((i + 1) % par == 0)
-				break;
-			req[i].join();
-		}
+		fixedThreadPool.awaitTermination(20000, TimeUnit.MILLISECONDS);
 		ArrayList<LocationList> res = new ArrayList<LocationList>();
 		for (int i = 0; i < list.size(); i++) {
 			res.add(req[i].getRes());
 		}
-
 		int cnt = 0;
+		int totalTime = 0;
 		ArrayList<Integer> loss = new ArrayList<Integer>();
 		for (int i = 0; i < qs.size(); i++) {
 			Vertex start = qs.getQueries().get(i).getWaypoints().get(0);
@@ -342,7 +344,7 @@ public class LBS {
 					}
 					d1 = llist.get(j).distance(end);
 					d2 = llist.get(j + 1).distance(end);
-					if (d1 + d2 - d <= 20) {
+					if (d1 + d2 - d <= 10) {
 						endIn = true;
 					}
 				}
@@ -350,34 +352,23 @@ public class LBS {
 					cnt++;
 					target = true;
 					qs.get(i).setRequestTime(llist.getResponseTime());
+					totalTime += llist.getResponseTime();
+					break;
 				}
 			}
 			if (!target)
 				loss.add(i);
 		}
-		System.out.println("Target " + cnt + "/" + qs.size());
-		System.out.println(loss);
+		System.out.println("Average response time: " + totalTime * 1.0 / (qs.size() - loss.size()) + " ms.");
+		System.out.println("Request freq :" + list.size());
+		// System.out.println("Target " + cnt + "/" + qs.size());
 		Clock.getClock("Request").end();
-		Clock.getClock("Request").show("Request totally in ");
 
-		Request[] subReq = new Request[loss.size()];
-		for (int i = 0; i < loss.size(); i++) {
-			LocationList addList = new LocationList();
-			addList.add(qs.getQueries().get(loss.get(i)).getWaypoints().get(0));
-			addList.add(qs.getQueries().get(loss.get(i)).getWaypoints()
-					.get(qs.getQueries().get(loss.get(i)).getWaypoints().size() - 1));
-			subReq[i] = new Request(addList);
-			subReq[i].start();
-		}
-		for (int i = 0; i < loss.size(); i++) {
-			subReq[i].join();
-			qs.getQueries().get(loss.get(i)).setRequestTime(subReq[i].getTime() + Clock.getClock("Request").getTime());
-		}
 	}
 
-	public void writeQuerySet(String path, int size, int bells, int scale) throws IOException {
+	public void writeQuerySet(String path, int size, int bells, int scale, int maxPointNum) throws IOException {
 		ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(new File(path)));
-		QuerySet qs = generateQuerySet(size, bells, scale);
+		QuerySet qs = generateQuerySet(size, bells, scale, maxPointNum);
 		out.writeObject(qs);
 		out.flush();
 		out.close();
@@ -392,17 +383,15 @@ public class LBS {
 
 	public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
 		LBS lbs = new LBS();
-		QuerySet qs = lbs.generateQuerySet(200, 10, 10);
-		lbs.dijikstra(qs);
-		lbs.initSa(qs);
-		lbs.setMaxPointNum(10);
+		QuerySet qs = lbs.generateQuerySet(800, 10, 3, 20);
+
 		ArrayList<LocationList> list;
+		System.out.println("\nSelectSort:");
 		list = lbs.mergeBySelectSort(qs);
-		// list = lbs.mergeByGreedy(qs);
 		lbs.request(qs, list, 300);
-		for (Query q : qs.getQueries()) {
-			System.out.println(q.getRequestTime());
-		}
+		System.out.println("\nGreedy:");
+		list = lbs.mergeByGreedy(qs);
+		lbs.request(qs, list, 300);
 		System.out.println("done");
 	}
 }

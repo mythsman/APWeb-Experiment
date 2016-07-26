@@ -132,11 +132,13 @@ public class Graph implements Serializable {
 		long start = System.currentTimeMillis();
 		loadVertices(new File("dataset/Minneapolis_vertices.txt"));
 		long end = System.currentTimeMillis();
-		System.out.println("Loading " + vertices.size() + " vertices costs " + (end - start) + "ms.");
+		// System.out.println("Loading " + vertices.size() + " vertices costs "
+		// + (end - start) + "ms.");
 		start = System.currentTimeMillis();
 		loadEdges(new File("dataset/Minneapolis_edges.txt"));
 		end = System.currentTimeMillis();
-		System.out.println("Loading " + edges.size() + " edges costs " + (end - start) + "ms.");
+		// System.out.println("Loading " + edges.size() + " edges costs " + (end
+		// - start) + "ms.");
 		start = System.currentTimeMillis();
 		loadPois(new File("dataset/BarLocations_61.txt"));
 		loadPois(new File("dataset/CafeLocations_65.txt"));
@@ -149,7 +151,8 @@ public class Graph implements Serializable {
 			pois.remove(constraint);
 		}
 		end = System.currentTimeMillis();
-		System.out.println("Loading " + pois.size() + " pois costs " + (end - start) + "ms.");
+		// System.out.println("Loading " + pois.size() + " pois costs " + (end -
+		// start) + "ms.");
 		addPatch();
 	}
 
