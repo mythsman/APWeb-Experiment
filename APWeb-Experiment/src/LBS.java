@@ -17,10 +17,6 @@ public class LBS {
 	private final double INF = 1e99;
 	private int wp = 10;
 
-	public void setGraph(Graph graph) {
-		this.graph = graph;
-	}
-
 	public void setMaxPointNum(int maxPointNum) {
 		this.wp = maxPointNum;
 	}
@@ -30,8 +26,12 @@ public class LBS {
 		graph.loadGraph();
 	}
 
-	public QuerySet generateQuerySet(int size, int bells, int scale, int maxPointNum) {
-		this.setMaxPointNum(maxPointNum);
+	public LBS(int wp) throws ClassNotFoundException, IOException {
+		this();
+		this.wp = wp;
+	}
+
+	public QuerySet generateQuerySet(int size, int bells, int scale) {
 		Clock.getClock("GenerateQuerySet").start();
 		QuerySet qs = new QuerySet();
 		int[] sizeofBells = new int[bells];
@@ -359,16 +359,16 @@ public class LBS {
 			if (!target)
 				loss.add(i);
 		}
-		System.out.println("Average response time: " + totalTime * 1.0 / (qs.size() - loss.size()) + " ms.");
+		System.out.println("Average response time: " + totalTime / (qs.size() - loss.size()) + " ms.");
 		System.out.println("Request freq :" + list.size());
 		// System.out.println("Target " + cnt + "/" + qs.size());
 		Clock.getClock("Request").end();
 
 	}
 
-	public void writeQuerySet(String path, int size, int bells, int scale, int maxPointNum) throws IOException {
+	public void writeQuerySet(String path, int size, int bells, int scale) throws IOException {
 		ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(new File(path)));
-		QuerySet qs = generateQuerySet(size, bells, scale, maxPointNum);
+		QuerySet qs = generateQuerySet(size, bells, scale);
 		out.writeObject(qs);
 		out.flush();
 		out.close();
@@ -382,9 +382,8 @@ public class LBS {
 	}
 
 	public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
-		LBS lbs = new LBS();
-		QuerySet qs = lbs.generateQuerySet(800, 10, 3, 20);
-
+		LBS lbs = new LBS(10);
+		QuerySet qs = lbs.generateQuerySet(500, 10, 3);
 		ArrayList<LocationList> list;
 		System.out.println("\nSelectSort:");
 		list = lbs.mergeBySelectSort(qs);

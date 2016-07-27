@@ -62,7 +62,6 @@ public class Request extends Thread {
 		connection.connect();
 
 		try {
-
 			in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 			String line;
 			while ((line = in.readLine()) != null) {
@@ -85,7 +84,7 @@ public class Request extends Thread {
 			}
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		clock.end();
 		res.setResponseTime(clock.getTime());
