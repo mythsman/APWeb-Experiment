@@ -22,7 +22,8 @@ public class Request extends Thread {
 		res = new LocationList();
 	}
 
-	public static String[] urls = { "AsZOWyYLr14AKviF4sCb1pjf6Mxp4U79toQ9hpFlAawE9V6tGnjPCq5JV4hBHIOG",
+	public static String[] urls = {
+			"AsZOWyYLr14AKviF4sCb1pjf6Mxp4U79toQ9hpFlAawE9V6tGnjPCq5JV4hBHIOG",
 			"AiF5rjhPwqK8UOyzmg8yxFqILQcRouLZiz8JeoEORTRGzpFjAnriYJoRg49KgctN",
 			"AvBMPrSwSYiANzMNuBvzk3zEfv1jGbGSmTr9wU7Tv_qiXTVDdH5nKDnaUJQlJ3vP",
 			"ApPND2d30kmDtW6AFDYOCNcIBu753PHSYuMtTmfBvIfa7Airtlejo8YLZqYBKWD1",
@@ -57,12 +58,13 @@ public class Request extends Thread {
 		URLConnection connection = realUrl.openConnection();
 		connection.setRequestProperty("accept", "*/*");
 		connection.setRequestProperty("connection", "Keep-Alive");
-		connection.setRequestProperty("user-agent", "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1;SV1)");
-
-		connection.connect();
+		connection.setRequestProperty("user-agent",
+				"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1;SV1)");
 
 		try {
-			in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+			connection.connect();
+			in = new BufferedReader(new InputStreamReader(
+					connection.getInputStream()));
 			String line;
 			while ((line = in.readLine()) != null) {
 				result += line;
@@ -75,16 +77,21 @@ public class Request extends Thread {
 			arr = json.getJSONArray("routeLegs");
 			for (int i = 0; i < arr.length() - 1; i++) {
 				json = arr.getJSONObject(i);
-				JSONArray end = json.getJSONObject("actualEnd").getJSONArray("coordinates");
+				JSONArray end = json.getJSONObject("actualEnd").getJSONArray(
+						"coordinates");
 				double latitude = Double
-						.parseDouble(end.toString().substring(1, end.toString().length() - 1).split(",")[0]);
+						.parseDouble(end.toString()
+								.substring(1, end.toString().length() - 1)
+								.split(",")[0]);
 				double longitude = Double
-						.parseDouble(end.toString().substring(1, end.toString().length() - 1).split(",")[1]);
+						.parseDouble(end.toString()
+								.substring(1, end.toString().length() - 1)
+								.split(",")[1]);
 				res.add(new Vertex(longitude, latitude, -1));
 			}
 
 		} catch (Exception e) {
-			//e.printStackTrace();
+			// e.printStackTrace();
 		}
 		clock.end();
 		res.setResponseTime(clock.getTime());
